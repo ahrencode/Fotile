@@ -1,0 +1,55 @@
+
+BODY
+{
+    font-family:   "Gill Sans", "Trebuchet MS";
+}
+
+#navcolumn
+{
+    border-right:       solid 1px #eeeeee;
+    padding-left:       0px;
+}
+
+.button
+{
+    font-size:          14pt;
+    cursor:             pointer;
+    border:             solid 2px #ffffff;
+    background-color:   #5599ff;
+}
+
+#helptext
+{
+    font-size:          14pt;
+    color:              #ffffff;
+}
+
+#puzzle
+{
+    margin-left:        20px;
+    border:             solid 1px #ffffff;
+    padding:            0px;
+    background-color:   #333333;
+}
+
+#chooser
+{
+    z-index:            2;
+    position:           absolute;
+    visibility:         hidden;
+    top:                100;
+    left:               15%;
+    width:              70%;
+    height:             400px;
+    border:             solid 2px #ffffff;
+    padding:            20px;
+    background-color:   #000000;
+    color:              #ffffff;
+    overflow:           auto;
+}
+
+.chooserpic
+{
+    border:             solid 1px #eeeeee;
+}
+
