@@ -15,10 +15,13 @@ $(document).ready
 (
     function()
     {
-        $('#urlsubmit').click( function() { loadPhoto($('#url').val(), '', ''); });
+        //$('#urlsubmit').click( function() { loadPhoto($('#url').val(), '', 'You?'); });
         $('.tileimg').click(checkMove);
         $('#cluelink').click(function() { $('#clue').fadeIn(); });
-        loadPhoto('rogerpenrose.jpg', 'Roger Penrose', 'Wikipedia');
+        if( $('#url').val() != '' )
+            loadPhoto($('#url').val(), '', 'You?');
+        else
+            loadPhoto('rogerpenrose.jpg', 'Roger Penrose', 'Wikipedia');
     }
 );
 
@@ -184,6 +187,7 @@ function flickIt()
         return;
     }
 
+    $('#url').val('');
     idx = Math.round(100 * Math.random());
     photo = flickrPhotos[idx];
     logtrace("Using photo: "); logtrace(photo);
@@ -217,9 +221,11 @@ function jsonFlickrApi(rsp)
 <center>
 
 <div id='urlbox'>
-    Image URL:
-    <input id='url' type='text' size='50' val='' />
-    <input id='urlsubmit' type='button' class='button' value='Tile It' />
+    <form method='get'>
+        Image URL:
+        <input id='url' name='url' type='text' size='50' value='<?php print $_GET["url"]; ?>' />
+        <input id='urlsubmit' type='submit' class='button' value='Tile It' />
+    </form>
 </div>
 
 <table border=0 cellpadding=10 cellspacing=10>
