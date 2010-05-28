@@ -1,0 +1,181 @@
+
+BODY
+{
+    font-family:        'Lobster', "Lucida Grande", "Trebuchet MS", sans-serif;
+    font-size:          40px;
+    background:         url(robinson-tiles-small.png) top right repeat;
+    background-color:   #222222;
+    color:              #ffffff;
+    margin:             0;
+    padding:            0;
+}
+
+A
+{
+    color:              inherit;
+    text-decoration:    none;
+}
+
+#backdrop
+{
+    position:           absolute;
+    top:                0;
+    left:                0;
+    height:             100%;
+    width:             100%;
+    margin:             0;
+    padding:            0;
+    background-color:   #000000;
+    opacity:            0.5;
+}
+
+#main
+{
+    position:           relative;
+    top:                0;
+    left:               0;
+    background-color:   inherit !important;
+    width:              80%;
+    border:             10px solid #ffffff;
+    margin:             60px auto;
+    padding:            50px 50px 30px 50px;
+    opacity:            1.0;
+}
+
+#urlbox
+{
+    margin-bottom:      20px;
+}
+
+#navcolumn
+{
+    border-right:       solid 1px #eeeeee;
+    padding-left:       0px;
+    padding-right:      30px;
+}
+
+#count
+{
+    background-color:       #bb2200;
+    color:                  #ffffff;
+    padding:                5px 15px;
+    text-align:             center;
+    border-radius:          4px;
+    -webkit-border-radius:  4px;
+    -moz-border-radius:     4px;
+    box-shadow:             2px 2px 5px #000000;
+    -webkit-box-shadow:     2px 2px 5px #000000;
+    -moz-box-shadow:        2px 2px 5px #000000;
+    font-family:            inherit;
+    font-size:              30px;
+
+}
+
+.button
+{
+    font-family:            inherit;
+    font-size:              30px;
+    cursor:                 pointer;
+    background-color:       #004488;
+    color:                  #ffffff;
+    padding:                5px 15px;
+    border:                 0px;
+    border-radius:          4px;
+    -webkit-border-radius:  4px;
+    -moz-border-radius:     4px;
+    box-shadow:             2px 2px 5px #000000;
+    -webkit-box-shadow:     2px 2px 5px #000000;
+    -moz-box-shadow:        2px 2px 5px #000000;
+    user-select:            none;
+    -webkit-user-select:    none;
+    -moz-user-select:       none;
+
+}
+
+#helptext
+{
+    font-size:          25px;
+    color:              #cccccc;
+    padding-top:        40px;
+}
+
+#url
+{
+    height:             30px;
+    font-size:          10pt;
+    border:             4px solid #777777;
+    background-color:   #ffffff;
+    color:              #333333;
+}
+
+#puzzle
+{
+    display:            none;
+    margin-left:        20px;
+    border:             solid 4px #ffffff;
+    padding:            0px;
+    background-color:   #bb2200;
+}
+
+#puzzle TD
+{
+    overflow:           hidden;
+}
+
+#photo
+{
+    display:            none;
+}
+
+#alertbox
+{
+    position:               absolute;
+    z-index:                10;
+    top:                    40%;
+    left:                   25%;
+    display:                none;
+    width:                  50%;
+    height:                 100px;
+    margin:                 auto auto;
+    padding:                40px;
+    text-align:             center;
+    vertical-align:         middle;
+    background-color:       #bb2200;
+    font-size:              25px;
+    border-radius:          10px;
+    -webkit-border-radius:  10px;
+    -moz-border-radius:     10px;
+    box-shadow:             2px 2px 5px #000000;
+    -webkit-box-shadow:     2px 2px 5px #000000;
+    -moz-box-shadow:        2px 2px 5px #000000;
+}
+
+#credits
+{
+    display:                hide;
+    font-size:              10px;
+    font-family:            "Lucida Grande", sans-serif;
+    color:                  #777777;
+    text-align:             center;
+    margin-top:             10px;
+}
+
+#bottombar
+{
+    margin-top:             30px;
+    font-size:              15px;
+    color:                  #777777;
+}
+
+.bblink
+{
+    color:                  #2288aa;
+    cursor:                 pointer;
+}
+
+#clue
+{
+    display:                none;
+    color:                  #227700;
+}
+

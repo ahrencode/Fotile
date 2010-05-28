@@ -3,227 +3,238 @@
 
 <head>
 
-<link href="tiles.css" rel="stylesheet" type="text/css">
-
-<?php
-
-global $HTTP_GET_VARS;
-
-$imgdir = $HTTP_GET_VARS['puzzle'];
-$next   = get_next($imgdir);
-if( $imgdir != "" )
-    init_images($imgdir);
-else
-    print "
-        <script language='JavaScript'>
-        var noPuzzle = 1;
-        </script>
-        ";
-
-function get_next($imgdir)
-{
-    $tiledirs = get_dir_entries(".", "d");
-    for($ctr = 0; $imgdir != "" && $imgdir != $tiledirs[$ctr] && $ctr < count($tiledirs); $ctr++)
-        ;
-    if( $ctr >= (count($tiledirs)-1) )
-        $ctr = 0;
-    else
-        $ctr++;
-    return($tiledirs[$ctr]);
-}
-
-function init_images($imgdir)
-{
-    print "
-        <script language='JavaScript'>
-        var tileDir = '$imgdir';
-        var pics = new Array(
-    ";
-
-    $images = get_dir_entries($imgdir, "f");
-    $first = 1;
-    foreach( $images as $image )
-    {
-        if( preg_match("/^thumbnail.jpg$/", $image) )
-            continue;
-        if( ! $first )
-            print ",\n";
-        $first = 0;
-        print "\t\t'$image'";
-    }
-
-    print "
-        );
-        </script>
-        ";
-}
-
-function get_dir_entries($dir, $type)
-{
-    if( ! ( $dh = opendir($dir) ) )
-    {
-        print "Could not scan directory ($dir)!\n";
-        exit;
-    }
-
-    $entries = array();
-    while( ($entry = readdir($dh)) !== false )
-    {
-        if( $entry == "." || $entry == ".." )
-            continue;
-        if( $type == "d" && ! is_dir("$dir/$entry") )
-            continue;
-        if( $type == "f" && ! is_file("$dir/$entry") )
-            continue;
-
-        array_push($entries, $entry);
-    }
-
-    closedir($dh);
-
-    natsort($entries);
-    return($entries);
-}
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Lobster" />
+<link rel="stylesheet" type="text/css" href="fotile.css" />
 
 
-function init_chooser()
-{
-    $tiledirs = get_dir_entries(".", "d");
-    print "<table border=0 cellpadding=0 cellspacing=20>\n<tr>\n";
-    $ctr = 0;
-    foreach( $tiledirs as $dir )
-    {
-        if( $ctr > 0 && $ctr % 6 == 0 )
-            print "</tr>\n<tr>\n";
-        print "
-            <td>
-                <a href='?puzzle=$dir'><img class='chooserpic' src='$dir/thumbnail.jpg'></a>
-            </td>
-            ";
-        $ctr++;
-    }
-    print "</tr></table>\n";
-}
-
-?>
+<script type='text/javascript' src='jquery-min.js'></script>
 
 <script language='JavaScript'>
 
+$(document).ready
+(
+    function()
+    {
+        $('#urlsubmit').click( function() { loadPhoto($('#url').val(), '', ''); });
+        $('.tileimg').click(checkMove);
+        $('#cluelink').click(function() { $('#clue').fadeIn(); });
+        loadPhoto('rogerpenrose.jpg', 'Roger Penrose', 'Wikipedia');
+    }
+);
+
+var maxWidth = 600;
+var maxHeight = 450;
 var srcSelected = 0;
 var srcTile = "";
-var noPuzzle;
 
-function initTiles()
+var loadAttempts = 1;
+function loadPhoto(url, title, owner)
 {
-    srcSelected = 0;
+    $('#credits').hide();
 
-    if( noPuzzle == 1 )
+    if( loadAttempts > 5 )
     {
-        showChooser();
+        logtrace('Giving up on loading image.');
+        showalert("Sorry. Failed to load the image. Reload this page and try again.");
         return;
     }
 
-    var availImages = new Array();
+    showalert("Loading (attempt " + loadAttempts + "). Please Wait...");
+
+    if( loadAttempts == 1 )
+    {
+        $('#puzzle').hide();
+        $('#photo').attr('src', url);
+    }
+
+    $('#count').text(0);
+
+    var height  = $('#photo').attr('height');
+    var width   = $('#photo').attr('width');
+    logtrace("URL = " + url + ", Attempt = " + loadAttempts + ", Height = " + height + ", width = " + width);
+
+    if( height == 0 || width == 0 )
+    {
+        loadAttempts++;
+        jsloopcall = "loadPhoto('" +url+ "','" +escape(title)+ "','"+ escape(owner)+ "')";
+        logtrace("Looping to call: " + jsloopcall);
+        setTimeout(""+jsloopcall, 1000);
+        return;
+    }
+
+    loadAttempts = 1;
+    $('#alertbox').hide();
+
+    if( width > height && width > maxWidth )
+    {
+        logtrace("Sizing width down");
+        height = (maxWidth/width)*height;
+        width = maxWidth;
+    }
+    else
+    if( height > maxHeight )
+    {
+        logtrace("Sizing height down");
+        width = (maxHeight/height)*width;
+        height = maxHeight;
+    }
+
+    height = Math.floor(height/3)*3;
+    width = Math.floor(width/4)*4;
+    logtrace("New height = " + height + ", width = " +width);
+
+    $('#puzzle').css('height', height);
+    $('#puzzle').css('width', width);
+    cellheight = height / 3;
+    cellwidth = width / 4;
+    logtrace("Setting cell height = " + cellheight + ", width = " + cellwidth);
+    $('#puzzle TD').css('width', cellwidth);
+    $('#puzzle TD DIV').css('width', cellwidth);
+    $('#puzzle TD').css('height', cellheight);
+    $('#puzzle TD DIV').css('height', cellheight);
+
+    $('.tileimg').each(function() { $(this).css('height', height); } );
+    $('.tileimg').each(function() { $(this).css('width', width); } );
+    $('.tileimg').each(function() { $(this).attr('src', url); } );
+
+    initTiles();
+
+    $('#puzzle').show();
+
+    if( title == '' )
+        title = "Untitled";
+    if( owner == '' )
+        owner = "Uknown";
+    $('#credits').text("Photograph: "+unescape(title)+". By: "+unescape(owner));
+    $('#credits').fadeIn();
+}
+
+function initTiles()
+{
+    var usedSegments = new Array();
     for(i = 0; i <= 12; i++)
-        availImages[i] = 1;
+        usedSegments[i] = 0;
 
     for(i = 1; i <= 3; i++)
         for(j = 1; j <= 4; j++)
     {
-        img = 0;
-        while( availImages[img] != 1 )
-            img = Math.round(11 * Math.random());
-        availImages[img] = 0;
-        document.images["pic"+i+j].src = tileDir + "/" + pics[img];
+        do
+        {
+            segment = Math.round(11 * Math.random());
+        }
+        while( usedSegments[segment] == 1 )
+        usedSegments[segment] = 1;
+        x = (segment%4)*cellwidth;
+        y = Math.floor(segment/4)*cellheight;
+        logtrace('Setting margin for ('+i+','+j+') to'+'-'+x+',-'+y);
+        $('#pic'+i+j).css('margin-left', '-'+x);
+        $('#pic'+i+j).css('margin-top', '-'+y);
     }
 }
 
-
-function showChooser()
-{
-    document.getElementById('chooser').style.visibility = 'visible';
-}
-
-function checkMove(tile)
+function checkMove()
 {
     if( ! srcSelected )
     {
         srcSelected = 1;
-        srcTile = tile.name;
-        flashImage(tile.name);
+        srcTile = $(this).attr('id');
+        $(this).css('opacity', '0.5');
     }
     else
     {
+        $('#count').text(parseInt($('#count').text()) + 1);
+        $('#'+srcTile).css('opacity', '1.0');
         srcSelected = 0;
-        var tmptile = document.images[srcTile].src;
-        document.images[srcTile].src = tile.src;
-        document.images[srcTile].style.border = 'none';
-        tile.src = tmptile;
+        tgtTile = $(this).attr('id');
+        if( tgtTile == srcTile )
+            return;
+        tgtX = $(this).css('margin-left');
+        tgtY = $(this).css('margin-top');
+        $(this).hide();
+         $(this).css('margin-left', $('#'+srcTile).css('margin-left'));
+         $(this).css('margin-top', $('#'+srcTile).css('margin-top'));
+        $('#'+srcTile).fadeOut(300);
+        $(this).fadeIn(300);
+        $('#'+srcTile).css('margin-left', tgtX);
+        $('#'+srcTile).css('margin-top', tgtY);
+        $('#'+srcTile).fadeIn(300);
     }
 }
 
-function flashImage(name)
+function logtrace(msg)
 {
-    var tile = document.images[name];
+    return;
+    console.log(msg);
+}
 
-    if( srcSelected == 0 )
+function showalert(msg)
+{
+    $('#alertbox').hide();
+    $('#alertbox').text(msg);
+    $('#alertbox').fadeIn(300);
+}
+
+var flickrPhotos;
+
+function flickIt()
+{
+    if( flickrPhotos.length <= 1 )
     {
-        tile.style.visibility = 'visible';
+        showalert("Failed to load photos from Flickr. Sorry.");
         return;
     }
 
-	( tile.style.visibility == 'visible' ) ?
-        tile.style.visibility = 'hidden' :
-        tile.style.visibility = 'visible';
-
-	setTimeout('flashImage("' + name + '")', 500);
+    idx = Math.round(100 * Math.random());
+    photo = flickrPhotos[idx];
+    logtrace("Using photo: "); logtrace(photo);
+    url = (photo.url_o) ? photo.url_o : photo.url_m;
+    loadPhoto(url, photo.title, photo.ownername+" (Flickr)");
 }
 
+function jsonFlickrApi(rsp)
+{
+    if (rsp.stat != "ok")
+        return;
+
+    flickrPhotos = rsp.photos.photo;
+}
 
 </script>
 
+<script
+    type="text/javascript"
+    language="javascript"
+    src="http://api.flickr.com/services/rest/?format=json&method=flickr.interestingness.getList&api_key=dcdaa246e88b8e12d4bb89f0a8c226a6&extras=owner_name,url_o,url_m"></script>
+
 </head>
 
-<body bgcolor='#555555' width='100%' onLoad='initTiles();'>
+<body bgcolor='#555555' width='100%'>
+
+<div id='backdrop'>
+</div>
+
+<div id='main'>
 <center>
 
-<br/>
-
-<?php
-if( $imgdir != "" )
-{
-?>
+<div id='urlbox'>
+    Image URL:
+    <input id='url' type='text' size='50' val='' />
+    <input id='urlsubmit' type='button' class='button' value='Tile It' />
+</div>
 
 <table border=0 cellpadding=10 cellspacing=10>
 
 <tr>
 
 <td id='navcolumn'>
+
     <table border=0 cellpadding=10 cellspacing=10 width='100'>
-    <tr>
-    <td class='button' onClick="initTiles();">
-        Reset
-    </td>
-    </tr>
-    <tr>
-    <td class='button' onClick='document.location = "?puzzle=<?php print $next; ?>";'>
-        Next
-    </td>
-    </tr>
-    <tr>
-    <td class='button' onClick='showChooser();'>
-        Choose
-    </td>
-    </tr>
-    <tr>
-        <td> <br/><br/> </td>
-    </tr>
-    <tr>
-    <td id='helptext'>
-        Click on a tile and then another, to swap them.
-    </td>
-    </tr>
+        <tr> <td id='count'> </td> </tr>
+        <tr> <td class='button' onClick='flickIt();'>Flick</td> </tr>
+        <tr> <td class='button' onClick="initTiles();">Reset</td> </tr>
+        <tr> <td id='helptext'>Click on a tile and then another, to swap them</td> </tr>
     </table>
+
 </td>
 
 <td>
@@ -231,44 +242,51 @@ if( $imgdir != "" )
     <table id='puzzle' cellspacing=0 cellpadding=0 border=0>
 
     <tr>
-        <td><img name='pic11' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic12' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic13' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic14' src='' onClick='checkMove(this);'></td>
+        <td><div><img id='pic11' class='tileimg' src=''></div></td>
+        <td><div><img id='pic12' class='tileimg' src=''></div></td>
+        <td><div><img id='pic13' class='tileimg' src=''></div></td>
+        <td><div><img id='pic14' class='tileimg' src=''></div></td>
     </tr>
 
     <tr>
-        <td><img name='pic21' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic22' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic23' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic24' src='' onClick='checkMove(this);'></td>
+        <td><div><img id='pic21' class='tileimg' src=''></div></td>
+        <td><div><img id='pic22' class='tileimg' src=''></div></td>
+        <td><div><img id='pic23' class='tileimg' src=''></div></td>
+        <td><div><img id='pic24' class='tileimg' src=''></div></td>
     </tr>
 
     <tr>
-        <td><img name='pic31' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic32' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic33' src='' onClick='checkMove(this);'></td>
-        <td><img name='pic34' src='' onClick='checkMove(this);'></td>
+        <td><div><img id='pic31' class='tileimg' src=''></div></td>
+        <td><div><img id='pic32' class='tileimg' src=''></div></td>
+        <td><div><img id='pic33' class='tileimg' src=''></div></td>
+        <td><div><img id='pic34' class='tileimg' src=''></div></td>
     </tr>
 
     </table>
 
+    <div id='credits'>
+    </div>
+
+</td>
+</tr>
+
 </table>
 
-<?php
-}
-?>
-
-<div id='chooser'>
-    <center>
-    <h1>Choose a Puzzle</h1>
-    <?php init_chooser(); ?>
-    </center>
+<div id='bottombar'>
+    <span id='cluelink' class='bblink'>Clue?</span>
+    <span id='clue'>Click and drag any tile to see the original photograph</span> |
+    <span class='bblink'><a href='http://ahren.org/code/fotile'>Download? Info?</a></span> |
+    <span class='bblink'><a href='http://code.google.com/apis/webfonts/'>Fonts?</a></span>
+        <small>(thank you Google!)</small>
 </div>
 
-<br/>
-
 </center>
+</div>
+
+<img id='photo' src='' />
+
+<div id='alertbox'>
+</div>
 </body>
 </html>
 
