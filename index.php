@@ -1,5 +1,9 @@
+<!DOCTYPE
+    html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 
@@ -9,30 +13,61 @@
 
 <script type='text/javascript' src='jquery-min.js'></script>
 
-<script language='JavaScript'>
+<script type='text/javascript'>
+
+/* configurable stuff */
+var maxWidth = 600;
+var maxHeight = 450;
+/* end configurable stuff */
+
+var sourcePhotos = [];
+
+var srcSelected = 0;
+var srcTile = "";
+var cellwidth = 0;
+var cellheight = 0;
+
 
 $(document).ready
 (
     function()
     {
-        //$('#urlsubmit').click( function() { loadPhoto($('#url').val(), '', 'You?'); });
         $('.tileimg').click(checkMove);
-        $('#cluelink').click(function() { $('#clue').fadeIn(); });
-        if( $('#url').val() != '' )
-            loadPhoto($('#url').val(), '', 'You?');
-        else
+
+        $('.bblink').click
+        (
+            function()
+            {
+                $('.bbanswer').hide();
+                $(this).next('.bbanswer').fadeIn();
+            }
+        );
+
+        $('#flickrhint').click( function() { $('#source').val('flickr://'); });
+        $('#urlhint').click( function() { $('#source').val('http:// enter rest of URL here'); });
+        $('#localhint').click
+        (
+            function()
+            {
+                $('#source').val('file:// enter file/dir path under your Fotile root');
+            }
+        );
+
+        if( $('#source').val() == '' )
             loadPhoto('rogerpenrose.jpg', 'Roger Penrose', 'Wikipedia');
+        else
+        if( $('#source').val().substr(0, 7) == 'http://' )
+            loadPhoto($('#source').val(), 'Untitled', 'You?');
+        else
+            nextPhoto();    // assume it is Flickr or local
     }
 );
 
-var maxWidth = 600;
-var maxHeight = 450;
-var srcSelected = 0;
-var srcTile = "";
-
 var loadAttempts = 1;
+var img;
 function loadPhoto(url, title, owner)
 {
+    $('#count').hide();
     $('#credits').hide();
 
     if( loadAttempts > 5 )
@@ -47,13 +82,12 @@ function loadPhoto(url, title, owner)
     if( loadAttempts == 1 )
     {
         $('#puzzle').hide();
-        $('#photo').attr('src', url);
+        img = new Image();
+        img.src = url;
     }
 
-    $('#count').text(0);
-
-    var height  = $('#photo').attr('height');
-    var width   = $('#photo').attr('width');
+    height  = img.height;
+    width   = img.width;
     logtrace("URL = " + url + ", Attempt = " + loadAttempts + ", Height = " + height + ", width = " + width);
 
     if( height == 0 || width == 0 )
@@ -129,10 +163,14 @@ function initTiles()
         usedSegments[segment] = 1;
         x = (segment%4)*cellwidth;
         y = Math.floor(segment/4)*cellheight;
-        logtrace('Setting margin for ('+i+','+j+') to'+'-'+x+',-'+y);
-        $('#pic'+i+j).css('margin-left', '-'+x);
-        $('#pic'+i+j).css('margin-top', '-'+y);
+        xstr = (x == 0) ? "0px" : "-"+x+"px";
+        ystr = (y == 0) ? "0px" : "-"+y+"px";
+        logtrace('Setting margin for ('+i+','+j+') to '+xstr+','+ystr);
+        $('#pic'+i+j).css('margin-left', xstr);
+        $('#pic'+i+j).css('margin-top', ystr);
     }
+
+    $('#count').text(0);
 }
 
 function checkMove()
@@ -146,6 +184,7 @@ function checkMove()
     else
     {
         $('#count').text(parseInt($('#count').text()) + 1);
+        $('#count').show(); // TODO: need to do this only once, really, not for each move!
         $('#'+srcTile).css('opacity', '1.0');
         srcSelected = 0;
         tgtTile = $(this).attr('id');
@@ -167,7 +206,7 @@ function checkMove()
 function logtrace(msg)
 {
     return;
-    console.log(msg);
+    //console.log(msg);
 }
 
 function showalert(msg)
@@ -177,22 +216,16 @@ function showalert(msg)
     $('#alertbox').fadeIn(300);
 }
 
-var flickrPhotos;
-
-function flickIt()
+function nextPhoto()
 {
-    if( flickrPhotos.length <= 1 )
+    if( sourcePhotos.length < 1 )
     {
-        showalert("Failed to load photos from Flickr. Sorry.");
+        showalert("Failed to load photos from source. Sorry.");
         return;
     }
-
-    $('#url').val('');
-    idx = Math.round(100 * Math.random());
-    photo = flickrPhotos[idx];
-    logtrace("Using photo: "); logtrace(photo);
-    url = (photo.url_o) ? photo.url_o : photo.url_m;
-    loadPhoto(url, photo.title, photo.ownername+" (Flickr)");
+    idx = Math.floor(sourcePhotos.length * Math.random());
+    photo = sourcePhotos[idx];
+    loadPhoto(photo.url, photo.title, photo.owner);
 }
 
 function jsonFlickrApi(rsp)
@@ -200,19 +233,63 @@ function jsonFlickrApi(rsp)
     if (rsp.stat != "ok")
         return;
 
-    flickrPhotos = rsp.photos.photo;
+    for( i in rsp.photos.photo )
+    {
+        photo = rsp.photos.photo[i];
+        url = (photo.url_o) ? photo.url_o : photo.url_m;
+        photoinfo = { url: url, title: photo.title, owner: photo.ownername+" (Flickr)" };
+        sourcePhotos.push(photoinfo);
+    }
 }
 
 </script>
 
-<script
-    type="text/javascript"
-    language="javascript"
-    src="http://api.flickr.com/services/rest/?format=json&method=flickr.interestingness.getList&api_key=dcdaa246e88b8e12d4bb89f0a8c226a6&extras=owner_name,url_o,url_m"></script>
+<?php
+
+$source = $_GET['source'];
+
+if( preg_match("/^flickr:\/\//", $source) )
+{
+    print
+    "
+        <script
+            type='text/javascript'
+            src='http://api.flickr.com/services/rest/?" .
+                "format=json&method=flickr.interestingness.getList&" .
+                "api_key=dcdaa246e88b8e12d4bb89f0a8c226a6&" .
+                "extras=owner_name,url_o,url_m'></script>
+    ";
+}
+// ugly hacky stuff that hopefully makes this a bit more secure
+elseif( preg_match("/^file:\/\/(.+)/", $source, $matches) &&
+        preg_match("/^" . preg_quote(realpath("."), '/') . "\//", realpath("./".$matches[1])) )
+        // try to avoid nefarious use of ".." etc to navigate out of the fotile root
+        // the second check is to make sure that after all is expanded, the specified
+        // path is under the fotile root
+{
+    $path = "./" . $matches[1];
+    if( is_dir("$path") )
+        foreach( preg_grep("/^.*\.(png|jpg|gif)$/", scandir("$path")) as $file )
+            print
+            "
+                <script type='text/javascript'>
+                    sourcePhotos.push({ url: '$path/$file', title: 'Untitled', owner: 'You?'});
+                </script>
+            ";
+    else // assume its a local file
+        print
+        "
+            <script type='text/javascript'>
+                sourcePhotos.push({ url: '$path', title: 'Untitled', owner: 'You?'});
+            </script>
+        ";
+}
+
+?>
 
 </head>
 
-<body bgcolor='#555555' width='100%'>
+<body>
 
 <div id='backdrop'>
 </div>
@@ -220,23 +297,31 @@ function jsonFlickrApi(rsp)
 <div id='main'>
 <center>
 
-<div id='urlbox'>
+<div id='sourcebox'>
     <form method='get'>
-        Image URL:
-        <input id='url' name='url' type='text' size='50' value='<?php print $_GET["url"]; ?>' />
-        <input id='urlsubmit' type='submit' class='button' value='Tile It' />
+        Source:
+        <input id='source' name='source' type='text' size='50'
+            value='<?php global $source; print $source; ?>' />
+        <input type='submit' class='button' value='Load It' />
+        <div class='smallstuff' style='margin-top: 10px;'>
+            (source can be a 
+             <span id='urlhint' class='hintlink'>URL to an image</span>,
+             relative <span id='localhint' class='hintlink'>path to a local file or directory</span>
+             with image files, or 
+             <span id='flickrhint' class='hintlink'>Flickr</span>)
+        </div>
     </form>
 </div>
 
-<table border=0 cellpadding=10 cellspacing=10>
+<table cellpadding='10' cellspacing='10'>
 
 <tr>
 
 <td id='navcolumn'>
 
-    <table border=0 cellpadding=10 cellspacing=10 width='100'>
+    <table cellpadding='10' cellspacing='10' width='100'>
         <tr> <td id='count'> </td> </tr>
-        <tr> <td class='button' onClick='flickIt();'>Flick</td> </tr>
+        <tr> <td class='button' onClick='nextPhoto();'>Flick</td> </tr>
         <tr> <td class='button' onClick="initTiles();">Reset</td> </tr>
         <tr> <td id='helptext'>Click on a tile and then another, to swap them</td> </tr>
     </table>
@@ -245,27 +330,27 @@ function jsonFlickrApi(rsp)
 
 <td>
 
-    <table id='puzzle' cellspacing=0 cellpadding=0 border=0>
+    <table id='puzzle' cellspacing='0' cellpadding='0'>
 
     <tr>
-        <td><div><img id='pic11' class='tileimg' src=''></div></td>
-        <td><div><img id='pic12' class='tileimg' src=''></div></td>
-        <td><div><img id='pic13' class='tileimg' src=''></div></td>
-        <td><div><img id='pic14' class='tileimg' src=''></div></td>
+        <td><div><img id='pic11' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic12' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic13' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic14' class='tileimg' alt='' src='' /></div></td>
     </tr>
 
     <tr>
-        <td><div><img id='pic21' class='tileimg' src=''></div></td>
-        <td><div><img id='pic22' class='tileimg' src=''></div></td>
-        <td><div><img id='pic23' class='tileimg' src=''></div></td>
-        <td><div><img id='pic24' class='tileimg' src=''></div></td>
+        <td><div><img id='pic21' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic22' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic23' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic24' class='tileimg' alt='' src='' /></div></td>
     </tr>
 
     <tr>
-        <td><div><img id='pic31' class='tileimg' src=''></div></td>
-        <td><div><img id='pic32' class='tileimg' src=''></div></td>
-        <td><div><img id='pic33' class='tileimg' src=''></div></td>
-        <td><div><img id='pic34' class='tileimg' src=''></div></td>
+        <td><div><img id='pic31' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic32' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic33' class='tileimg' alt='' src='' /></div></td>
+        <td><div><img id='pic34' class='tileimg' alt='' src='' /></div></td>
     </tr>
 
     </table>
@@ -278,18 +363,18 @@ function jsonFlickrApi(rsp)
 
 </table>
 
-<div id='bottombar'>
-    <span id='cluelink' class='bblink'>Clue?</span>
-    <span id='clue'>Click and drag any tile to see the original photograph</span> |
-    <span class='bblink'><a href='http://ahren.org/code/fotile'>Download? Info?</a></span> |
-    <span class='bblink'><a href='http://code.google.com/apis/webfonts/'>Fonts?</a></span>
+<div id='bottombar' class='smallstuff'>
+    <span class='bblink hintlink'>Clue?</span>
+    <span class='bbanswer'>Click and drag any tile to see the original photograph</span> |
+    <span class='bblink hintlink'><a href='http://ahren.org/code/fotile'>Download? Info?</a></span> |
+    <span class='bblink hintlink'>Browsers?</span>
+    <span class='bbanswer'>Firefox 3.5+, Safari 3+, Chrome 4+, IE 7+</span> |
+    <span class='bblink hintlink'><a href='http://code.google.com/apis/webfonts/'>Fonts?</a></span>
         <small>(thank you Google!)</small>
 </div>
 
 </center>
 </div>
-
-<img id='photo' src='' />
 
 <div id='alertbox'>
 </div>

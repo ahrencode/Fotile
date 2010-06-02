@@ -6,8 +6,10 @@ BODY
     background:         url(robinson-tiles-small.png) top right repeat;
     background-color:   #222222;
     color:              #ffffff;
+    width:              100%;
+    height:             100%;
     margin:             0;
-    padding:            0;
+    padding:            60px 0px; /* one way in IE for top margin for #main which is position: relative */
 }
 
 A
@@ -18,33 +20,34 @@ A
 
 #backdrop
 {
-    position:           absolute;
+    position:           fixed;
+    z-index:            2;
     top:                0;
-    left:                0;
+    left:               0;
     height:             100%;
     width:             100%;
     margin:             0;
     padding:            0;
     background-color:   #000000;
     opacity:            0.7;
+    filter:             alpha(opacity=70);
 }
 
 #main
 {
     position:           relative;
-    top:                0;
-    left:               0;
-    background-color:   inherit !important;
+    z-index:            3;
+    background-color:   #222222 !important;
     width:              80%;
     border:             10px solid #ffffff;
-    margin:             60px auto;
+    margin:             0px auto;
     padding:            50px 50px 30px 50px;
     opacity:            1.0;
 }
 
-#urlbox
+#sourcebox
 {
-    margin-bottom:      20px;
+    margin-bottom:      10px;
 }
 
 #navcolumn
@@ -56,6 +59,7 @@ A
 
 #count
 {
+    display:                none;
     background-color:       #bb2200;
     color:                  #ffffff;
     padding:                5px 15px;
@@ -73,7 +77,7 @@ A
 
 .button
 {
-    font-family:            inherit;
+    font-family:            inherit;    /* doesn't seem to work for IE (IE7 at least) */
     font-size:              30px;
     cursor:                 pointer;
     background-color:       #004488;
@@ -99,13 +103,15 @@ A
     padding-top:        40px;
 }
 
-#url
+#source
 {
     height:             30px;
     font-size:          10pt;
     border:             4px solid #777777;
     background-color:   #ffffff;
     color:              #333333;
+    vertical-align:     top;
+    margin-top:         12px;
 }
 
 #puzzle
@@ -117,24 +123,32 @@ A
     background-color:   #bb2200;
 }
 
-#puzzle TD
+#puzzle TD DIV
 {
     overflow:           hidden;
 }
 
+.tileimg
+{
+    padding:            0px;
+    border:             0px;
+}
+
+/*
 #photo
 {
-    display:            none;
+    display:                none;
 }
+*/
 
 #alertbox
 {
-    position:               absolute;
+    position:               fixed;
     z-index:                10;
     top:                    40%;
-    left:                   25%;
+    left:                   30%;
     display:                none;
-    width:                  50%;
+    width:                  40%;
     height:                 100px;
     margin:                 auto auto;
     padding:                40px;
@@ -152,7 +166,7 @@ A
 
 #credits
 {
-    display:                hide;
+    display:                none;
     font-size:              10px;
     font-family:            "Lucida Grande", sans-serif;
     color:                  #777777;
@@ -163,19 +177,23 @@ A
 #bottombar
 {
     margin-top:             30px;
+}
+
+.smallstuff
+{
     font-size:              15px;
     color:                  #777777;
 }
 
-.bblink
+.hintlink
 {
     color:                  #2288aa;
     cursor:                 pointer;
 }
 
-#clue
+.bbanswer
 {
     display:                none;
-    color:                  #227700;
+    color:                  #338800;
 }
 
